@@ -1,18 +1,10 @@
-import type { Cell } from './Cell';
-import type { GemType } from '@/config/boardConfig';
+import { GemType, SpecialType } from '@/types/GameTypes';
 
-export class Gem {
-  constructor(
-    public readonly id: number,
-    public readonly type: GemType,
-    public cell: Cell
-  ) {}
-
-  get row(): number {
-    return this.cell.row;
-  }
-
-  get col(): number {
-    return this.cell.col;
-  }
+export interface Gem {
+  id: number;
+  type: GemType;
+  row: number;
+  col: number;
+  special?: SpecialType;
+  isMatched?: boolean;
 }
