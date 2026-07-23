@@ -1,4 +1,5 @@
 import { GameStateEnum } from '@/types/GameTypes';
+import { globalEventBus, GameEvents } from './EventBus';
 
 export class StateMachine {
   private currentState: GameStateEnum = GameStateEnum.BOOT;
@@ -12,6 +13,7 @@ export class StateMachine {
     if (this.currentState === newState) return;
     this.currentState = newState;
     this.listeners.forEach(fn => fn(newState));
+    globalEventBus.emit(GameEvents.STATE_CHANGED, newState);
   }
 
   onChange(listener: (state: GameStateEnum) => void): () => void {
