@@ -1,7 +1,7 @@
 import { GameStateEnum } from '@/types/GameTypes';
 
-export class GameStateManager {
-  private currentState: GameStateEnum = GameStateEnum.IDLE;
+export class StateMachine {
+  private currentState: GameStateEnum = GameStateEnum.BOOT;
   private listeners: ((state: GameStateEnum) => void)[] = [];
 
   get state(): GameStateEnum {
@@ -22,6 +22,11 @@ export class GameStateManager {
   }
 
   canAcceptInput(): boolean {
-    return this.currentState === GameStateEnum.IDLE || this.currentState === GameStateEnum.HINT;
+    return (
+      this.currentState === GameStateEnum.WAIT_INPUT ||
+      this.currentState === GameStateEnum.IDLE ||
+      this.currentState === GameStateEnum.READY ||
+      this.currentState === GameStateEnum.HINT
+    );
   }
 }
