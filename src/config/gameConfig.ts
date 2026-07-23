@@ -1,16 +1,12 @@
-export const BOARD_SIZE = 8;
-export const TILE_SIZE = 64;
-
-export const COLORS = [
-  '#FF595E',
-  '#FFCA3A',
-  '#8AC926',
-  '#1982C4',
-  '#6A4C93',
-] as const;
-
-export const MOVE_DURATION = 180;
-export const FALL_DURATION = 180;
-export const DESTROY_DURATION = 140;
-
-export const CTA_DELAY = 1200;
+export const GAME_CONFIG = {
+  board: {
+    rows: 6,
+    cols: 6,
+    tileSize: 64,
+  },
+  targetCombinations: 3,
+  storeUrl: 'https://example.com',
+  playableScenario: {
+    targetSwap: { from: { row: 3, col: 2 }, to: { row: 3, col: 3 } },
+  },
+};
