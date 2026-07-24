@@ -1,4 +1,4 @@
-import { Board } from '@/model/Board';
+import { Board } from '@/core/Board';
 import { BoardView } from '@/components/Board/BoardView';
 import { BoardInput } from '@/components/Board/BoardInput';
 

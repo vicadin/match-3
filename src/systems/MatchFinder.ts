@@ -1,4 +1,4 @@
-import { Board } from '@/model/Board';
+import { Board } from '@/core/Board';
 import { Gem } from '@/model/Gem';
 
 export interface Match {
