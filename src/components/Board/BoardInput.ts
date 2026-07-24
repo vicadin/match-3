@@ -1,7 +1,8 @@
-import { Board } from '@/model/Board';
+import { Board } from '@/core/Board';
 import { Gem } from '@/model/Gem';
 import { GEM_SIZE } from '@/config/boardConfig';
-import { BoardView } from './BoardView';
+import { BoardRenderer } from '@/renderer/BoardRenderer';
+import { soundSystem } from '@/systems/SoundSystem';
 
 export interface SwapRequest {
   from: Gem;
@@ -12,130 +13,112 @@ export class BoardInput {
   private startGem: Gem | null = null;
   private startX = 0;
   private startY = 0;
+  private enabled = true;
+  private isSwapping = false;
 
   constructor(
     private readonly board: Board,
-    private readonly view: BoardView,
+    private readonly renderer: BoardRenderer,
     private readonly onSwap: (swap: SwapRequest) => void
   ) {
     this.bindEvents();
   }
 
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
+    if (!enabled) {
+      this.cancelDrag();
+    }
+  }
+
   destroy(): void {
-    this.view.element.removeEventListener(
-      'pointerdown',
-      this.handlePointerDown
-    );
-
-    window.removeEventListener(
-      'pointermove',
-      this.handlePointerMove
-    );
-
-    window.removeEventListener(
-      'pointerup',
-      this.handlePointerUp
-    );
+    this.renderer.element.removeEventListener('pointerdown', this.handlePointerDown);
+    window.removeEventListener('pointermove', this.handlePointerMove);
+    window.removeEventListener('pointerup', this.handlePointerUp);
+    window.removeEventListener('pointercancel', this.handlePointerUp);
   }
 
   private bindEvents(): void {
-    this.view.element.addEventListener(
-      'pointerdown',
-      this.handlePointerDown
-    );
-
-    window.addEventListener(
-      'pointermove',
-      this.handlePointerMove,
-      {
-        passive: true,
-      }
-    );
-
-    window.addEventListener(
-      'pointerup',
-      this.handlePointerUp
-    );
+    this.renderer.element.addEventListener('pointerdown', this.handlePointerDown);
+    window.addEventListener('pointermove', this.handlePointerMove, { passive: true });
+    window.addEventListener('pointerup', this.handlePointerUp);
+    window.addEventListener('pointercancel', this.handlePointerUp);
   }
 
   private handlePointerDown = (event: PointerEvent): void => {
-    const gem = this.getGemFromEvent(event);
+    if (!this.enabled || this.isSwapping) return;
 
-    if (!gem) {
-      return;
-    }
+    const gem = this.getGemFromEvent(event);
+    if (!gem) return;
 
     this.startGem = gem;
     this.startX = event.clientX;
     this.startY = event.clientY;
+
+    this.renderer.setSelectedGem(gem);
+    soundSystem.playClick();
   };
 
   private handlePointerMove = (event: PointerEvent): void => {
-    if (!this.startGem) {
-      return;
-    }
+    if (!this.enabled || !this.startGem || this.isSwapping) return;
 
     const dx = event.clientX - this.startX;
     const dy = event.clientY - this.startY;
 
-    if (
-      Math.abs(dx) < 18 &&
-      Math.abs(dy) < 18
-    ) {
+    const threshold = 14;
+    if (Math.abs(dx) < threshold && Math.abs(dy) < threshold) {
       return;
     }
 
-    let row = this.startGem.row;
-    let col = this.startGem.col;
+    let targetRow = this.startGem.row;
+    let targetCol = this.startGem.col;
 
     if (Math.abs(dx) > Math.abs(dy)) {
-      col += dx > 0 ? 1 : -1;
+      targetCol += dx > 0 ? 1 : -1;
     } else {
-      row += dy > 0 ? 1 : -1;
+      targetRow += dy > 0 ? 1 : -1;
     }
 
-    if (
-      row < 0 ||
-      row >= this.board.rows ||
-      col < 0 ||
-      col >= this.board.cols
-    ) {
-      this.startGem = null;
+    if (!this.board.isInside(targetRow, targetCol)) {
+      this.cancelDrag();
       return;
     }
 
-    const neighbour = this.board.get(row, col);
+    const neighbour = this.board.get(targetRow, targetCol);
+    if (!neighbour) {
+      this.cancelDrag();
+      return;
+    }
 
-    this.onSwap({
-      from: this.startGem,
-      to: neighbour,
-    });
+    const fromGem = this.startGem;
+    this.isSwapping = true;
+    this.cancelDrag();
 
-    this.startGem = null;
+    this.onSwap({ from: fromGem, to: neighbour });
+
+    setTimeout(() => {
+      this.isSwapping = false;
+    }, 200);
   };
 
   private handlePointerUp = (): void => {
-    this.startGem = null;
+    this.cancelDrag();
   };
 
-  private getGemFromEvent(
-    event: PointerEvent
-  ): Gem | null {
-    const rect =
-      this.view.element.getBoundingClientRect();
+  private cancelDrag(): void {
+    this.startGem = null;
+    this.renderer.setSelectedGem(null);
+  }
 
+  private getGemFromEvent(event: PointerEvent): Gem | null {
+    const rect = this.renderer.element.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
     const col = Math.floor(x / GEM_SIZE);
     const row = Math.floor(y / GEM_SIZE);
 
-    if (
-      row < 0 ||
-      row >= this.board.rows ||
-      col < 0 ||
-      col >= this.board.cols
-    ) {
+    if (!this.board.isInside(row, col)) {
       return null;
     }
 
