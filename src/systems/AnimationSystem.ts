@@ -1,61 +1,129 @@
-import { Gem } from '@/model/Gem';
-import { BoardView } from '@/components/Board/BoardView';
-import { GravityResult } from './GravitySystem';
-import { Match } from './MatchFinder';
-
-const SWAP_DURATION = 220;
-const FALL_DURATION = 250;
-const REMOVE_DURATION = 180;
+import { GemRenderer } from '@/renderer/GemRenderer';
+import { GEM_SIZE } from '@/config/boardConfig';
+import { easeInOutQuad, easeOutBounce } from '@/utils/easing';
+import { ANIMATION_CONFIG } from '@/config/animationConfig';
 
 export class AnimationSystem {
-  constructor(private readonly view: BoardView) {}
 
-  async playSwap(first: Gem, second: Gem): Promise<void> {
-    await this.view.animateSwap(first, second);
-    await this.delay(SWAP_DURATION);
-  }
-
-  async playInvalidSwap(first: Gem, second: Gem): Promise<void> {
-    await this.view.animateSwap(first, second);
-    await this.delay(SWAP_DURATION);
-
-    await this.view.animateSwap(second, first);
-    await this.delay(SWAP_DURATION);
-  }
-
-  async playRemove(matches: Match[]): Promise<void> {
-    for (const match of matches) {
-      for (const gem of match.gems) {
-        this.view.removeGem(gem);
-      }
-    }
-
-    await this.delay(REMOVE_DURATION);
-  }
-
-  async playGravity(result: GravityResult): Promise<void> {
-    if (
-      result.falls.length === 0 &&
-      result.spawns.length === 0
-    ) {
-      return;
-    }
-
-    await this.view.animateFalls();
-    await this.delay(FALL_DURATION);
-  }
-
-  async playCascade(
-    matches: Match[],
-    gravity: GravityResult
+  async animateSwap(
+    viewA: GemRenderer,
+    viewB: GemRenderer,
+    r1: number,
+    c1: number,
+    r2: number,
+    c2: number,
+    duration = ANIMATION_CONFIG.swapDuration
   ): Promise<void> {
-    await this.playRemove(matches);
-    await this.playGravity(gravity);
+    const startX1 = c1 * GEM_SIZE;
+    const startY1 = r1 * GEM_SIZE;
+    const endX1 = c2 * GEM_SIZE;
+    const endY1 = r2 * GEM_SIZE;
+
+    const startX2 = c2 * GEM_SIZE;
+    const startY2 = r2 * GEM_SIZE;
+    const endX2 = c1 * GEM_SIZE;
+    const endY2 = r1 * GEM_SIZE;
+
+    return new Promise(resolve => {
+      const startTime = performance.now();
+
+      const step = (now: number) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = easeInOutQuad(progress);
+
+        const currentX1 = startX1 + (endX1 - startX1) * ease;
+        const currentY1 = startY1 + (endY1 - startY1) * ease;
+
+        const currentX2 = startX2 + (endX2 - startX2) * ease;
+        const currentY2 = startY2 + (endY2 - startY2) * ease;
+
+        viewA.move(currentX1, currentY1);
+        viewB.move(currentX2, currentY2);
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          viewA.setGridPosition(r2, c2);
+          viewB.setGridPosition(r1, c1);
+          resolve();
+        }
+      };
+
+      requestAnimationFrame(step);
+    });
   }
 
-  private delay(ms: number): Promise<void> {
+  async animateInvalidSwap(
+    viewA: GemRenderer,
+    viewB: GemRenderer,
+    r1: number,
+    c1: number,
+    r2: number,
+    c2: number,
+    duration = ANIMATION_CONFIG.swapDuration
+  ): Promise<void> {
+    await this.animateSwap(viewA, viewB, r1, c1, r2, c2, duration);
+    await this.animateSwap(viewA, viewB, r2, c2, r1, c1, duration);
+  }
+
+  async animateFall(
+    view: GemRenderer,
+    fromRow: number,
+    toRow: number,
+    col: number,
+    duration = ANIMATION_CONFIG.fallDuration
+  ): Promise<void> {
+    const startX = col * GEM_SIZE;
+    const startY = fromRow * GEM_SIZE;
+    const endY = toRow * GEM_SIZE;
+
     return new Promise(resolve => {
-      setTimeout(resolve, ms);
+      const startTime = performance.now();
+
+      const step = (now: number) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = easeOutBounce(progress);
+
+        const currentY = startY + (endY - startY) * ease;
+        view.move(startX, currentY);
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          view.setGridPosition(toRow, col);
+          resolve();
+        }
+      };
+
+      requestAnimationFrame(step);
+    });
+  }
+
+  async animateDestroy(view: GemRenderer, duration = ANIMATION_CONFIG.removeDuration): Promise<void> {
+    return new Promise(resolve => {
+      const startTime = performance.now();
+
+      const step = (now: number) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        const scale = Math.max(0, 1 + progress * 0.3 - progress * 1.3);
+        const opacity = 1 - progress;
+
+        view.scale(scale);
+        view.element.style.opacity = `${opacity}`;
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          view.destroy();
+          resolve();
+        }
+      };
+
+      requestAnimationFrame(step);
     });
   }
 }
