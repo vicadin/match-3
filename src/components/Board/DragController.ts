@@ -1,4 +1,4 @@
-import { Board } from './Board';
+import { Board } from '@/model/Board';
 import { Gem } from '@/model/Gem';
 
 export interface DragCallbacks {
@@ -118,7 +118,7 @@ export class DragController {
 
     for (const row of this.board.grid) {
       for (const gem of row) {
-        if (gem.id === id) {
+        if (gem && gem.id === id) {
           return gem;
         }
       }

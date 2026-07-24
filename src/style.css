@@ -1,0 +1,212 @@
+:root {
+  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+  --card-bg: rgba(30, 41, 59, 0.88);
+  --board-bg: #0d1322;
+  --text-main: #f8fafc;
+  --accent-pink: #ec4899;
+  --accent-purple: #8b5cf6;
+  --accent-blue: #3b82f6;
+  --accent-gold: #f59e0b;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  overflow-x: hidden;
+}
+
+#app {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+}
+
+.game {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  padding: 24px 28px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 40px rgba(139, 92, 246, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 520px;
+  width: 100%;
+}
+
+.game__board {
+  position: relative;
+  padding: 10px;
+  background: var(--board-bg);
+  border-radius: 22px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.6);
+  touch-action: none;
+}
+
+.board {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.board__grid-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.board__tile {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+}
+
+.tile--light {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.tile--dark {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.gem {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  margin: 4px;
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: inset 0 3px 6px rgba(255, 255, 255, 0.5), inset 0 -4px 6px rgba(0, 0, 0, 0.4), 0 6px 10px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  will-change: transform, opacity;
+}
+
+.gem__icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  pointer-events: none;
+}
+
+.gem__shine {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  width: 14px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
+  transform: rotate(-30deg);
+  pointer-events: none;
+}
+
+.gem:hover {
+  filter: brightness(1.15);
+}
+
+.gem.is-selected {
+  box-shadow: 0 0 22px #fbbf24, inset 0 3px 6px rgba(255, 255, 255, 0.9);
+  border: 2px solid #ffffff;
+  z-index: 10;
+}
+
+.gem--highlight {
+  box-shadow: 0 0 16px #38bdf8, inset 0 3px 6px rgba(255, 255, 255, 0.9);
+}
+
+.gem--shake {
+  animation: gemShake 0.25s ease-in-out;
+}
+
+@keyframes gemShake {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  20%, 60% { transform: translate3d(-4px, 0, 0); }
+  40%, 80% { transform: translate3d(4px, 0, 0); }
+}
+
+.game__message {
+  height: 36px;
+  font-size: 26px;
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.6), 0 0 16px rgba(251, 191, 36, 0.4);
+  opacity: 0;
+  transform: translateY(12px) scale(0.85);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.game__message.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.particle-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.floating-score {
+  position: absolute;
+  font-size: 22px;
+  font-weight: 900;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+  pointer-events: none;
+  z-index: 25;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
+  white-space: nowrap;
+}
+
+.floating-score.animate {
+  animation: floatUp 0.8s forwards cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes floatUp {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  20% { opacity: 1; transform: translate(-50%, -80%) scale(1.2); }
+  80% { opacity: 1; transform: translate(-50%, -120%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -150%) scale(0.8); }
+}
