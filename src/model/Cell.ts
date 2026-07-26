@@ -16,7 +16,8 @@ export class Cell {
     this.gem = gem;
 
     if (gem) {
-      gem.cell = this;
+      gem.row = this.row;
+      gem.col = this.col;
     }
   }
 
