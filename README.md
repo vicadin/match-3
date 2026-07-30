@@ -1,15 +1,17 @@
-# Match-3 Game Engine
+# Match-3
 
-A lightweight HTML5/TypeScript Match-3 puzzle game engine built with TypeScript, Web Audio API, and CSS3 animations.
+A lightweight HTML5/TypeScript Match-3 puzzle game engine built with TypeScript, Web Audio API, and CSS3 animations
 
-## 🛠️ Tech Stack
+## Demo
+
+🌐 https://vicadin.github.io/match-3/
+
+## Tech Stack
 
 - **Language**: TypeScript
 - **Bundler / Dev Server**: Vite
 - **Styling**: CSS3
 - **Audio**: Web Audio API 
-
-## 🚀 Getting Started
 
 ### Installation & Execution
 
